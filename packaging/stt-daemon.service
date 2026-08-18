@@ -1,0 +1,31 @@
+# Alternativa a vozboard-daemon.desktop: correr stt-daemon como
+# servicio systemd de usuario (con reinicio automático si se cae).
+#
+# AJUSTÁ WorkingDirectory a donde extrajiste el proyecto antes de instalar.
+#
+# Instalar con:
+#   mkdir -p ~/.config/systemd/user
+#   cp packaging/stt-daemon.service ~/.config/systemd/user/
+#   # editar WorkingDirectory abajo
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now stt-daemon.service
+#
+# Nota: los servicios systemd --user a veces no heredan bien las
+# variables de entorno de la sesión gráfica (DISPLAY, WAYLAND_DISPLAY),
+# lo que puede romper el ícono de bandeja o el atajo. Si te pasa, probá
+# en cambio el autostart vía .desktop (vozboard-daemon.desktop),
+# que sí hereda el entorno completo de la sesión.
+
+[Unit]
+Description=Vozboard - dictado global standalone
+After=graphical-session.target ydotoold.service
+Wants=ydotoold.service
+
+[Service]
+WorkingDirectory=%h/vozboard
+ExecStart=/usr/bin/env uv run stt-daemon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

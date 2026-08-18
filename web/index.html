@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Consola · Vozboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #14171C;
+    --panel:     #1B1F27;
+    --panel-2:   #20262F;
+    --line:      #2C333E;
+    --text:      #ECE8DF;
+    --muted:     #7D8592;
+    --amber:     #E8A33D;
+    --amber-dim: #6B5426;
+    --green:     #6FCF97;
+    --red:       #E85D4C;
+    --radius:    10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% -10%, #1c212b 0%, transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:28px 20px 80px; }
+
+  /* ---------- header / console strip ---------- */
+  .console-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    margin-bottom:24px;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:10px; height:10px; border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+  }
+  .brand h1{
+    font-family:var(--mono); font-size:14px; letter-spacing:.14em;
+    text-transform:uppercase; margin:0; color:var(--text); font-weight:700;
+  }
+  .leds{ display:flex; gap:18px; font-family:var(--mono); font-size:11px; color:var(--muted); }
+  .led{ display:flex; align-items:center; gap:6px; }
+  .led .dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .led .dot.on{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .led span.val{ color:var(--text); }
+
+  .paths-strip{
+    font-family:var(--mono); font-size:10.5px; color:var(--muted);
+    display:flex; flex-wrap:wrap; gap:4px 16px;
+    padding:0 4px 14px; letter-spacing:.02em;
+  }
+  .paths-strip span b{ color:var(--text); font-weight:400; }
+
+  /* ---------- control panel: model / device / language ---------- */
+  .control-panel{
+    display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 18px;
+    margin-bottom:24px;
+  }
+  .control{ display:flex; flex-direction:column; gap:6px; min-width:150px; flex:1 1 150px; }
+  .control label{
+    font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .control select{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:var(--sans); font-size:13px;
+    padding:8px 10px;
+    border-radius:6px;
+    outline:none;
+  }
+  .control select:focus{ border-color:var(--amber-dim); }
+  #applyBtn{
+    background:var(--panel-2);
+    border:1px solid var(--amber-dim);
+    color:var(--amber);
+    font-family:var(--sans); font-size:13px; font-weight:600;
+    padding:9px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  #applyBtn:hover{ border-color:var(--amber); background:rgba(232,163,61,.08); }
+  #applyBtn:disabled{ opacity:.5; cursor:default; }
+  .apply-status{
+    font-family:var(--mono); font-size:11px; color:var(--muted);
+    display:flex; align-items:center; gap:6px; min-height:20px;
+  }
+  .apply-status.ok{ color:var(--green); }
+  .apply-status.err{ color:var(--red); }
+
+  /* ---------- transport / record section ---------- */
+  .deck{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:32px 24px;
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+    margin-bottom:20px;
+  }
+  .counter{
+    font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.08em;
+  }
+  .rec-btn{
+    position:relative;
+    width:104px; height:104px; border-radius:50%;
+    background:var(--panel-2);
+    border:2px solid var(--line);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .rec-btn:hover{ border-color:var(--amber-dim); }
+  .rec-btn .core{
+    width:34px; height:34px; border-radius:50%;
+    background:var(--red);
+    transition:all .2s ease;
+  }
+  .rec-btn.active{
+    border-color:var(--red);
+    box-shadow:0 0 0 6px rgba(232,93,76,.08), 0 0 20px rgba(232,93,76,.25);
+  }
+  .rec-btn.active .core{ border-radius:6px; width:28px; height:28px; }
+  .rec-label{ font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; }
+
+  .vu{
+    display:flex; align-items:flex-end; gap:3px; height:34px;
+    opacity:.35; transition:opacity .2s ease;
+  }
+  .vu.live{ opacity:1; }
+  .vu i{
+    width:4px; background:var(--green); border-radius:2px;
+    height:4px; transition:height .08s ease;
+  }
+
+  /* ---------- drop zone ---------- */
+  .dropzone{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    margin-bottom:24px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dropzone.drag{ border-color:var(--amber); background:rgba(232,163,61,.05); color:var(--text); }
+  .dropzone button{
+    background:none; border:1px solid var(--line); color:var(--text);
+    font-family:var(--sans); font-size:13px; padding:6px 14px; border-radius:6px;
+    cursor:pointer; margin-left:6px;
+  }
+  .dropzone button:hover{ border-color:var(--amber-dim); }
+
+  /* ---------- output: teletype panel ---------- */
+  .printout{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .printout-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 18px; border-bottom:1px solid var(--line);
+    font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.08em;
+  }
+  .printout-head .stats{ display:flex; gap:14px; }
+  .printout-body{ padding:20px 22px; min-height:80px; }
+  .placeholder{ color:var(--muted); font-size:13px; }
+  .transcript-text{
+    font-size:15px; line-height:1.7; white-space:pre-wrap; margin:0 0 16px;
+  }
+  .segments{ border-top:1px solid var(--line); padding-top:14px; display:flex; flex-direction:column; gap:6px; }
+  .seg-row{ display:flex; gap:12px; font-size:13px; }
+  .seg-row .ts{ font-family:var(--mono); color:var(--amber); flex:0 0 auto; white-space:nowrap; }
+  .seg-row .tx{ color:var(--text); opacity:.9; }
+  .downloads{ display:flex; gap:8px; padding:14px 18px; border-top:1px solid var(--line); flex-wrap:wrap; }
+  .downloads a{
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--text); text-decoration:none; border:1px solid var(--line); padding:6px 12px;
+    border-radius:6px;
+  }
+  .downloads a:hover{ border-color:var(--amber); color:var(--amber); }
+
+  .loading{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; }
+  .spinner{
+    width:14px; height:14px; border-radius:50%;
+    border:2px solid var(--line); border-top-color:var(--amber);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .error{ color:var(--red); font-size:13px; }
+
+  footer{ text-align:center; margin-top:28px; font-size:11px; color:var(--muted); font-family:var(--mono); }
+
+  @media (max-width:480px){
+    .console-bar{ flex-direction:column; align-items:flex-start; gap:10px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="console-bar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <h1>Consola · Vozboard</h1>
+      </div>
+      <div class="leds" id="leds">
+        <div class="led"><div class="dot" id="led-model"></div>MODELO <span class="val" id="val-model">—</span></div>
+        <div class="led"><div class="dot" id="led-device"></div>GPU <span class="val" id="val-device">—</span></div>
+      </div>
+    </div>
+    <div class="paths-strip" id="pathsStrip"></div>
+
+    <div class="control-panel">
+      <div class="control">
+        <label for="languageSelect">Idioma</label>
+        <select id="languageSelect"></select>
+      </div>
+      <div class="control">
+        <label for="modelSelect">Modelo</label>
+        <select id="modelSelect"></select>
+      </div>
+      <div class="control">
+        <label for="deviceSelect">Dispositivo</label>
+        <select id="deviceSelect">
+          <option value="cuda">CUDA (GPU)</option>
+          <option value="cpu">CPU</option>
+        </select>
+      </div>
+      <button id="applyBtn" type="button">Aplicar</button>
+      <span class="apply-status" id="applyStatus"></span>
+    </div>
+
+    <div class="deck">
+      <div class="counter" id="counter">00:00.0</div>
+      <button class="rec-btn" id="recBtn" aria-label="Grabar">
+        <div class="core"></div>
+      </button>
+      <div class="rec-label" id="recLabel">Presioná para grabar</div>
+      <div class="vu" id="vu">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+    </div>
+
+    <div class="dropzone" id="dropzone">
+      Arrastrá un archivo de audio acá (WAV, MP3, M4A, FLAC, OGG)
+      <button id="pickBtn" type="button">Elegir archivo</button>
+      <input type="file" id="fileInput" accept="audio/*" hidden />
+    </div>
+
+    <div class="printout">
+      <div class="printout-head">
+        <span id="printoutTitle">SALIDA</span>
+        <span class="stats" id="printoutStats"></span>
+      </div>
+      <div class="printout-body" id="printoutBody">
+        <div class="placeholder">Grabá o subí un archivo para ver la transcripción acá.</div>
+      </div>
+      <div class="downloads" id="downloads" style="display:none;"></div>
+    </div>
+
+    <footer>faster-whisper · local · sin nube</footer>
+  </div>
+
+<script>
+const state = { recording:false, mediaRecorder:null, chunks:[], stream:null, audioCtx:null, analyser:null, vuRaf:null, timerInterval:null, startedAt:0 };
+let currentServerConfig = { model:null, device:null, compute_type:null };
+
+const recBtn = document.getElementById('recBtn');
+const recLabel = document.getElementById('recLabel');
+const counterEl = document.getElementById('counter');
+const vuEl = document.getElementById('vu');
+const vuBars = [...vuEl.querySelectorAll('i')];
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const pickBtn = document.getElementById('pickBtn');
+const printoutBody = document.getElementById('printoutBody');
+const printoutStats = document.getElementById('printoutStats');
+const downloadsEl = document.getElementById('downloads');
+const languageSelect = document.getElementById('languageSelect');
+const modelSelect = document.getElementById('modelSelect');
+const deviceSelect = document.getElementById('deviceSelect');
+const applyBtn = document.getElementById('applyBtn');
+const applyStatus = document.getElementById('applyStatus');
+
+// ---------- status LEDs + control panel ----------
+async function refreshStatus(){
+  const s = await fetch('/api/status').then(r => r.json());
+  document.getElementById('val-model').textContent = s.model;
+  document.getElementById('val-device').textContent = s.device.toUpperCase();
+  document.getElementById('led-model').classList.add('on');
+  document.getElementById('led-device').classList.toggle('on', s.device === 'cuda');
+
+  const p = s.paths || {};
+  document.getElementById('pathsStrip').innerHTML = `
+    <span>modelos: <b>${p.models_dir || '—'}</b></span>
+    <span>salida: <b>${p.output_dir || '—'}</b></span>
+  `;
+
+  currentServerConfig = { model: s.model, device: s.device, compute_type: s.compute_type };
+  modelSelect.value = s.model;
+  deviceSelect.value = s.device;
+  return s;
+}
+
+async function populateControls(){
+  const [{ models }, { languages }] = await Promise.all([
+    fetch('/api/models').then(r => r.json()),
+    fetch('/api/languages').then(r => r.json()),
+  ]);
+
+  modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.label}</option>`).join('');
+  languageSelect.innerHTML = languages.map(l => `<option value="${l.id}">${l.label}</option>`).join('');
+
+  const s = await refreshStatus();
+  languageSelect.value = s.language || '';
+}
+populateControls().catch(() => {});
+
+applyBtn.addEventListener('click', async () => {
+  const model = modelSelect.value;
+  const device = deviceSelect.value;
+
+  if (model === currentServerConfig.model && device === currentServerConfig.device){
+    applyStatus.textContent = 'Sin cambios.';
+    applyStatus.className = 'apply-status';
+    return;
+  }
+
+  applyBtn.disabled = true;
+  applyStatus.className = 'apply-status';
+  applyStatus.innerHTML = `<div class="spinner"></div> Recargando modelo… puede tardar un rato`;
+
+  try {
+    const res = await fetch('/api/config', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ model, device }),
+    });
+    if (!res.ok){
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Error ${res.status}`);
+    }
+    await refreshStatus();
+    applyStatus.textContent = '✓ Modelo recargado.';
+    applyStatus.className = 'apply-status ok';
+  } catch (err){
+    applyStatus.textContent = '⚠ ' + err.message;
+    applyStatus.className = 'apply-status err';
+  } finally {
+    applyBtn.disabled = false;
+  }
+});
+
+// ---------- counter ----------
+function formatCounter(ms){
+  const totalSec = ms / 1000;
+  const m = Math.floor(totalSec / 60).toString().padStart(2,'0');
+  const s = (totalSec % 60).toFixed(1).padStart(4,'0');
+  return `${m}:${s}`;
+}
+function startCounter(){
+  state.startedAt = Date.now();
+  state.timerInterval = setInterval(() => {
+    counterEl.textContent = formatCounter(Date.now() - state.startedAt);
+  }, 100);
+}
+function stopCounter(){
+  clearInterval(state.timerInterval);
+}
+
+// ---------- VU meter ----------
+function startVU(stream){
+  state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = state.audioCtx.createMediaStreamSource(stream);
+  state.analyser = state.audioCtx.createAnalyser();
+  state.analyser.fftSize = 64;
+  source.connect(state.analyser);
+  const data = new Uint8Array(state.analyser.frequencyBinCount);
+  vuEl.classList.add('live');
+
+  function tick(){
+    state.analyser.getByteFrequencyData(data);
+    vuBars.forEach((bar, i) => {
+      const v = data[i % data.length] || 0;
+      bar.style.height = Math.max(4, (v / 255) * 34) + 'px';
+    });
+    state.vuRaf = requestAnimationFrame(tick);
+  }
+  tick();
+}
+function stopVU(){
+  cancelAnimationFrame(state.vuRaf);
+  vuEl.classList.remove('live');
+  vuBars.forEach(b => b.style.height = '4px');
+  if (state.audioCtx) state.audioCtx.close();
+}
+
+// ---------- recording ----------
+recBtn.addEventListener('click', async () => {
+  if (!state.recording){
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+      state.stream = stream;
+      state.chunks = [];
+      state.mediaRecorder = new MediaRecorder(stream);
+      state.mediaRecorder.ondataavailable = e => state.chunks.push(e.data);
+      state.mediaRecorder.onstop = onRecordingStop;
+      state.mediaRecorder.start();
+      state.recording = true;
+      recBtn.classList.add('active');
+      recLabel.textContent = 'Grabando… presioná para detener';
+      startCounter();
+      startVU(stream);
+    } catch (err){
+      showError('No se pudo acceder al micrófono: ' + err.message);
+    }
+  } else {
+    state.mediaRecorder.stop();
+    state.stream.getTracks().forEach(t => t.stop());
+    state.recording = false;
+    recBtn.classList.remove('active');
+    recLabel.textContent = 'Presioná para grabar';
+    stopCounter();
+    stopVU();
+  }
+});
+
+function onRecordingStop(){
+  const blob = new Blob(state.chunks, { type:'audio/webm' });
+  uploadAndTranscribe(blob, 'grabacion.webm');
+}
+
+// ---------- drag & drop / file picker ----------
+pickBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) uploadAndTranscribe(fileInput.files[0], fileInput.files[0].name);
+});
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+  e.preventDefault(); dropzone.classList.remove('drag');
+}));
+dropzone.addEventListener('drop', e => {
+  const file = e.dataTransfer.files[0];
+  if (file) uploadAndTranscribe(file, file.name);
+});
+
+// ---------- upload + render ----------
+async function uploadAndTranscribe(blob, filename){
+  printoutBody.innerHTML = `<div class="loading"><div class="spinner"></div> Transcribiendo con GPU…</div>`;
+  printoutStats.textContent = '';
+  downloadsEl.style.display = 'none';
+  downloadsEl.innerHTML = '';
+
+  const form = new FormData();
+  form.append('file', blob, filename);
+  form.append('language', languageSelect.value || '');
+
+  try {
+    const res = await fetch('/api/transcribe', { method:'POST', body: form });
+    if (!res.ok){
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `Error ${res.status}`);
+    }
+    const data = await res.json();
+    renderResult(data);
+  } catch (err){
+    showError(err.message);
+  }
+}
+
+function renderResult(data){
+  const speed = data.speed_factor ? `${data.speed_factor.toFixed(1)}x tiempo real` : '';
+  printoutStats.textContent = `${data.duration.toFixed(1)}s audio · ${data.elapsed.toFixed(1)}s proceso ${speed ? '· ' + speed : ''}`;
+
+  const segHtml = data.segments.map(s =>
+    `<div class="seg-row"><span class="ts">${fmt(s.start)}</span><span class="tx">${escapeHtml(s.text)}</span></div>`
+  ).join('');
+
+  printoutBody.innerHTML = `
+    <p class="transcript-text">${escapeHtml(data.text)}</p>
+    <div class="segments">${segHtml}</div>
+  `;
+
+  downloadsEl.style.display = 'flex';
+  downloadsEl.innerHTML = Object.entries(data.downloads).map(([fmt_, url]) =>
+    `<a href="${url}" download>${fmt_}</a>`
+  ).join('');
+}
+
+function fmt(sec){
+  const m = Math.floor(sec / 60).toString().padStart(2,'0');
+  const s = (sec % 60).toFixed(1).padStart(4,'0');
+  return `${m}:${s}`;
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function showError(msg){
+  printoutBody.innerHTML = `<div class="error">⚠ ${escapeHtml(msg)}</div>`;
+}
+</script>
+</body>
+</html>

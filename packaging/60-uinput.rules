@@ -1,0 +1,11 @@
+# Da acceso a /dev/uinput al grupo `input`, para poder correr ydotoold
+# como usuario normal en vez de como root.
+#
+# Instalar con:
+#   sudo cp packaging/60-uinput.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+#   sudo usermod -aG input $USER
+#   # cerrar sesión y volver a entrar para que el grupo tome efecto
+
+KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
