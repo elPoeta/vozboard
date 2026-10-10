@@ -1,0 +1,21 @@
+# Servicio systemd --user para ydotoold, corriendo como usuario normal
+# (no root) gracias a la regla udev en 60-uinput.rules.
+#
+# Instalar con:
+#   mkdir -p ~/.config/systemd/user
+#   cp packaging/ydotoold.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now ydotoold.service
+#   systemctl --user status ydotoold.service   # debería decir "active (running)"
+
+[Unit]
+Description=ydotoold - daemon de ydotool (simulación de teclado/mouse vía uinput)
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/ydotoold
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
