@@ -116,10 +116,10 @@ class TranscriberConfig:
     vad_filter: bool = True
     min_silence_duration_ms: int = 500
     download_root: str | None = DEFAULT_DOWNLOAD_ROOT
-
+    task: Literal["transcribe", "translate"] = "transcribe"
 
 _LANGUAGE_UNSET = object()
-
+_TASK_UNSET = object()
 
 class Transcriber:
     """Envoltorio delgado sobre WhisperModel, cargado una sola vez."""
@@ -143,7 +143,7 @@ class Transcriber:
             download_root=cfg.download_root,
         )
 
-    def transcribe(self, path: str | Path, language=_LANGUAGE_UNSET) -> TranscriptionResult:
+    def transcribe(self, path: str | Path, language=_LANGUAGE_UNSET, task=_TASK_UNSET) -> TranscriptionResult:
         """Transcribe un archivo.
 
         `language` permite pisar el idioma configurado para esta llamada
@@ -158,11 +158,13 @@ class Transcriber:
 
         cfg = self.config
         effective_language = cfg.language if language is _LANGUAGE_UNSET else language
+        effective_task = cfg.task if task is _TASK_UNSET else task
         start_time = time.time()
 
         raw_segments, info = self.model.transcribe(
             str(path),
             language=effective_language,
+            task=effective_task,
             beam_size=cfg.beam_size,
             vad_filter=cfg.vad_filter,
             vad_parameters={"min_silence_duration_ms": cfg.min_silence_duration_ms},
